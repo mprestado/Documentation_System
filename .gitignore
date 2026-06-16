@@ -1,0 +1,42 @@
+```
+# Laravel-specific ignores
+vendor/
+composer.lock
+.env
+.env.*
+!.env.example
+
+# PHP
+*.php~
+*.php.bak
+*.swp
+
+# Build and cache
+bootstrap/cache/
+storage/framework/cache/
+storage/logs/
+storage/framework/sessions/
+storage/framework/views/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+*.gcda
+*.gcno
+
+# Temporary files
+*.tmp
+*.temp
+```
