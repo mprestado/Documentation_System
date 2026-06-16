@@ -90,3 +90,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/users/{user}/assignments',   [UserController::class, 'getAssignments']);
     Route::post('/users/{user}/assignments',  [UserController::class, 'saveAssignments']);
 require __DIR__.'/auth.php';    
+/*
+|--------------------------------------------------------------------------
+| Down Payments
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    Route::get('/down-payments', [DownPaymentController::class, 'index'])
+        ->name('down-payments.index');
+    Route::get('/down-payments/create', [DownPaymentController::class, 'create'])
+        ->name('down-payments.create');
+    Route::post('/down-payments', [DownPaymentController::class, 'store'])
+        ->name('down-payments.store');
+    Route::get('/down-payments/{payment}/receipt', [DownPaymentController::class, 'showReceipt'])
+        ->name('down-payments.receipt');
+    Route::get('/down-payments/{payment}/print', [DownPaymentController::class, 'printReceipt'])
+        ->name('down-payments.print');
+    Route::delete('/down-payments/{payment}', [DownPaymentController::class, 'destroy'])
+        ->name('down-payments.destroy');
+});

@@ -738,7 +738,13 @@
     $allClients         = \App\Models\Client::select('id','client_name','status')->latest()->take(50)->get();
     $allServices        = \App\Models\Service::select('id','name')->latest()->take(50)->get();
     $allClientDocuments = \App\Models\ClientDocument::select('id','original_name','client_id')->latest()->take(50)->get();
-    $allUsers           = \App\Models\User::select('id','name','email')->latest()->take(50)->get();
+    
+    // User management: only show all users to admin/owner, otherwise just current user
+    $currentUser = auth()->user();
+    $isAdmin = in_array($currentUser->role ?? '', ['admin', 'owner']);
+    $allUsers = $isAdmin 
+        ? \App\Models\User::select('id','name','email','role')->latest()->take(50)->get()
+        : collect([$currentUser]);
 
     $recentClients  = \App\Models\Client::latest()->take(3)->get();
     $recentDocs     = \App\Models\ClientDocument::latest()->take(3)->get();

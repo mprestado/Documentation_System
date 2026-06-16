@@ -13,10 +13,22 @@ class UserController extends Controller
 {
     /**
      * List all users (also available as JSON for the modal).
+     * Non-admin users can only see their own account.
      */
     public function index(Request $request)
     {
-        $users = User::latest()->get();
+        $currentUser = auth()->user();
+        
+        // Check if user is admin or owner
+        $isAdmin = in_array($currentUser->role, ['admin', 'owner']);
+        
+        if ($isAdmin) {
+            // Admin/owner can see all users
+            $users = User::latest()->get();
+        } else {
+            // Non-admin users can only see their own account
+            $users = collect([$currentUser]);
+        }
 
         if ($request->wantsJson()) {
             return response()->json(['users' => $users]);
@@ -29,14 +41,25 @@ class UserController extends Controller
     /**
      * Create a new user.
      * Called via AJAX from the User Management modal.
+     * Only admin/owner can create users.
      */
     public function store(Request $request)
     {
+        $currentUser = auth()->user();
+        
+        // Only admin/owner can create users
+        if (!in_array($currentUser->role, ['admin', 'owner'])) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Unauthorized. Only administrators can create users.'
+            ], 403);
+        }
+        
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => ['required', Password::min(8)],
-            'role'     => 'sometimes|string|in:admin,staff,viewer',
+            'role'     => 'sometimes|string|in:admin,staff,viewer,owner',
         ]);
 
         $user = User::create([
@@ -55,12 +78,28 @@ class UserController extends Controller
 
     /**
      * Delete a user.
+     * Only admin/owner can delete users.
      */
     public function destroy(User $user)
     {
+        $currentUser = auth()->user();
+        
+        // Only admin/owner can delete users
+        if (!in_array($currentUser->role, ['admin', 'owner'])) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Unauthorized. Only administrators can delete users.'
+            ], 403);
+        }
+        
         // Prevent deleting yourself
         if ($user->id === auth()->id()) {
             return response()->json(['success' => false, 'message' => 'You cannot delete your own account.'], 403);
+        }
+        
+        // Prevent deleting the owner
+        if ($user->role === 'owner') {
+            return response()->json(['success' => false, 'message' => 'Cannot delete the owner account.'], 403);
         }
 
         $user->delete();
@@ -98,7 +137,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'document_ids'   => 'array',
-            'document_ids.*' => 'integer|exists:documents,id',
+            'document_ids.*' => 'integer|exists:client_documents,id',
             'service_ids'    => 'array',
             'service_ids.*'  => 'integer|exists:services,id',
         ]);
